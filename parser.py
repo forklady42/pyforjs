@@ -13,7 +13,7 @@ def E():
     
     
     if E1():
-        print 'E1 returned True':
+        print 'E1 returned True'
         return True
     else:
         reset(save)
@@ -21,7 +21,11 @@ def E():
         print 'E2 returned True'
         return True
     else:
+        print "reset in e2"
+        print "save is "
+        print save
         reset(save)
+        print next
     if E3():
         print 'E3 returned True'
         return True
@@ -57,6 +61,9 @@ def E():
 
 def E1():
     global next
+    print "E1"
+    print next
+    print tokens[next]
     if tokens[next] == "number":
         next+=1
         return True
@@ -66,13 +73,17 @@ def E1():
 
 def E2():
     global next
+    print "E2"
+    print next
+    print tokens[next]
     if tokens[next] == '(':
-        next+=1
+        #next+=1
         if E():
             if tokens[next] == ')':
                 next+=1
                 return True
             else:
+                print next
                 print "E2 False #1"
                 return False
         else:
@@ -85,10 +96,13 @@ def E2():
 
 def E3():
     global next
+    print "E3"
+    print next
+    print tokens[next]
     if tokens[next] == "number":
         next+=1
         if tokens[next] == '+':
-            next+=1
+            #next+=1
             if E():
                 return True
             else:
@@ -106,7 +120,7 @@ def E4():
     if tokens[next] == "number":
         next+=1
         if tokens[next] == '*':
-            next+=1
+       #     next+=1
             if E():
                 return True
             else:
@@ -124,7 +138,7 @@ def E5():
     if tokens[next] == "number":
         next+=1
         if tokens[next] == '/':
-            next+=1
+        #    next+=1
             if E():
                 return True
             else:
@@ -142,7 +156,7 @@ def E6():
     if tokens[next] == "number":
         next+=1
         if tokens[next] == '^':
-            next+=1
+            #next+=1
             if E():
                 return True
             else:
@@ -160,7 +174,7 @@ def E7():
     if tokens[next] == "number":
         next+=1
         if tokens[next] == '-':
-            next+=1
+            #next+=1
             if E():
                 return True
             else:
@@ -176,7 +190,7 @@ def E7():
 def E8():
     global next
     if tokens[next] == "-":
-        next+=1
+        #next+=1
         if E():
             return True
         else:
@@ -185,7 +199,10 @@ def E8():
     else:
         print "E8 False #2"
         return False
+
+
+print E()
         
-        
-while next < len(tokens):        
-    sprint E()
+
+#while next < len(tokens):        
+ #   sprint E()
