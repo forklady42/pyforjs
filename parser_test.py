@@ -139,6 +139,7 @@ def E():
     else:
         illegal = "Encountered an illegal character. So I ended up here :/ Please start with anything but +,*,/,^."
 
+
     
     return illegal
 
