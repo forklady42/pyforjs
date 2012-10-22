@@ -1,208 +1,78 @@
-next = -1
-tokens = ['(', 'number', '+', 'number', ')', '*', '+']
+"""parse_tree_result = {
+'type': "+",
+'left': {'type': "number", 'value': 12 },
+'right': {'type': "/", 'left': {'type': "number", 'value': 4 },'right': {'type': "number", 'value': 6 }}
+}"""
 
+#tokens = [['number', 12], ['operator', '+'], ['number', 4], ['operator', '/'], ['number', 6]]
+tokens = [['number', 12], ['operator', '/'], ['number', 4], ['operator', '+'], ['number', 6]]
 
+#tokens = [['number', 12], ['operator', '+'], ['number', 4]]
 
-def reset(save):
-    next = save
+counter = 0
+current_token = tokens[0]
 
-def E():
-    global next
-    save = next
-    next+=1
+def nud(l=''): #this empty string argument was a work around b/c when current token is number. the function that should be called is nud, but the algorithm doesn't seem to consider condidition within while loop?
+    left = {'type':current_token[0], 'value':current_token[1]}
+    return left
+
+def add(l, t):
+    tree = {'type':t[1], 'left': l, 'right': expression(10)}
+    return tree
+
+def div(l, t):
+    tree = {'type':t[1], 'left': l, 'right': expression(20)}
+    return tree
+
+def mul(l, t):
+    tree = {'type':t[1], 'left': l, 'right': expression(20)}
+    return tree
+
+#lambda x: x + n
+op_symbols = {'+': {'lbp':10, 'led':add}, '/':{'lbp':20, 'led':div}, '*':{'lbp':20, 'led':mul}}
+symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}}
+
+def read_next_token():
+    global counter, current_token
+
+    counter+=1
+
+    if counter < len(tokens):
+        current_token = tokens[counter]
+    else:
+        current_token = ['end', 0]
+
+def expression(rbp=0):
+    global current_token, op_symbols #, symbols
     
+    t = current_token
     
-    if E1():
-        print 'E1 returned True'
-        return True
-    else:
-        reset(save)
-    if E2():
-        print 'E2 returned True'
-        return True
-    else:
-        print "reset in e2"
-        print "save is "
-        print save
-        reset(save)
-        print next
-    if E3():
-        print 'E3 returned True'
-        return True
-    else:
-        reset(save)
-    if E4():
-        print 'E4 returned True'
-        return True
-    else:
-        reset(save)
-    if E5():
-        print 'E5 returned True'
-        return True
-    else:
-        reset(save)
-    if E6():
-        print 'E6 returned True'
-        return True
-    else:
-        reset(save)
-    if E7():
-        print 'E7 returned True'
-        return True
-    else:
-        reset(save)
-    if E8():
-        print 'E8 returned True'
-        return True
-    else:
-        reset(save)
-    return False
+    left = symbols[t[0]]['nud']() #TODO: add error handling for the instance where the first token isn't a number...or something invalid.
+    read_next_token()
     
 
-def E1():
-    global next
-    print "E1"
-    print next
-    print tokens[next]
-    if tokens[next] == "number":
-        next+=1
-        return True
-    else:
-        print "E1 False"
-        return False
+    try:
+        lbp = symbols[current_token[0]]['lbp']
+    except KeyError:
+        lbp = symbols[current_token[0]][current_token[1]]['lbp']
 
-def E2():
-    global next
-    print "E2"
-    print next
-    print tokens[next]
-    if tokens[next] == '(':
-        #next+=1
-        if E():
-            if tokens[next] == ')':
-                next+=1
-                return True
-            else:
-                print next
-                print "E2 False #1"
-                return False
-        else:
-            print "E2 False #2"
-            return False
-        
-    else:
-        print "E2 False #3"
-        return False
+    while rbp < lbp:
+        t = current_token
+        read_next_token()
+        left = symbols[t[0]][t[1]]['led'](left, t) #TODO:passing the 't' into the function is a hack. when add() is called the current token has already advanced. must figure out a way to increment current token after add is called...or re-work the next/current token bit
 
-def E3():
-    global next
-    print "E3"
-    print next
-    print tokens[next]
-    if tokens[next] == "number":
-        next+=1
-        if tokens[next] == '+':
-            #next+=1
-            if E():
-                return True
-            else:
-                print "E3 False #1"
-                return False
-        else:
-            print "E3 False #2"
-            return False
-    else:
-        print "E3 False #3"
-        return False
+        try:
+            lbp = symbols[current_token[0]]['lbp']
+        except KeyError:
+            lbp = symbols[current_token[0]][current_token[1]]['lbp']
 
-def E4():
-    global next
-    if tokens[next] == "number":
-        next+=1
-        if tokens[next] == '*':
-       #     next+=1
-            if E():
-                return True
-            else:
-                print "E4 False #1"
-                return False
-        else:
-            print "E4 False #2"
-            return False
-    else:
-        print "E4 False #3"
-        return False
+    return left
 
-def E5():
-    global next
-    if tokens[next] == "number":
-        next+=1
-        if tokens[next] == '/':
-        #    next+=1
-            if E():
-                return True
-            else:
-                print "E5 False #1"
-                return False
-        else:
-            print "E5 False #2"
-            return False
-    else:
-        print "E5 False #3"
-        return False
-
-def E6():
-    global next
-    if tokens[next] == "number":
-        next+=1
-        if tokens[next] == '^':
-            #next+=1
-            if E():
-                return True
-            else:
-                print "E6 False #1"
-                return False
-        else:
-            print "E6 False #2"
-            return False
-    else:
-        print "E6 False #2"
-        return False
-
-def E7():
-    global next
-    if tokens[next] == "number":
-        next+=1
-        if tokens[next] == '-':
-            #next+=1
-            if E():
-                return True
-            else:
-                print "E7 False #1"
-                return False
-        else:
-            print "E7 False #2"
-            return False
-    else:
-        print "E7 False #3"
-        return False
-
-def E8():
-    global next
-    if tokens[next] == "-":
-        #next+=1
-        if E():
-            return True
-        else:
-            print "E8 False #1"
-            return False
-    else:
-        print "E8 False #2"
-        return False
+def parse():
+    return expression()
 
 
-print E()
-        
+print parse()
 
-#while next < len(tokens):        
- #   sprint E()
+
+
