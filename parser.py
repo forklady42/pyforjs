@@ -4,8 +4,10 @@
 'right': {'type': "/", 'left': {'type': "number", 'value': 4 },'right': {'type': "number", 'value': 6 }}
 }"""
 
-#tokens = [['number', 12], ['operator', '+'], ['number', 4], ['operator', '/'], ['number', 6]]
-tokens = [['number', '4'], ['operator', '*'],['operator', '('],['operator', '-'],['number', 12],['operator', '+'], ['number', 6]]
+tokens = [['number', 12], ['operator', '+'], ['number', 4], ['operator', '/'], ['number', 6], ['end', ';']]
+#tokens = [['number', '4'], ['operator', '*'],['operator', '('],['operator', '-'],['number', 12],['operator', '+'], ['number', 6], ['operator', ';']]
+#tokens = [['number', 12], ['end', ';']]
+
 
 counter = 0
 current_token = tokens[0]
@@ -56,7 +58,7 @@ def read_next_token():
     if counter < len(tokens):
         current_token = tokens[counter]
     else:
-        current_token = ['end', 0]
+        "Syntax Error. Expecting ;"
 
 def expression(rbp=0):
     global current_token, op_symbols #, symbols
@@ -85,7 +87,6 @@ def expression(rbp=0):
             left = paren()
             
             return traverse(left, rbp)
-
         else:
             print "Invalid token. Number expected..."
 
