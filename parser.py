@@ -1,127 +1,115 @@
-"""parse_tree_result = {
-'type': "+",
-'left': {'type': "number", 'value': 12 },
-'right': {'type': "/", 'left': {'type': "number", 'value': 4 },'right': {'type': "number", 'value': 6 }}
-}"""
+class Token:
 
-tokens = [['number', 12], ['operator', '+'], ['number', 4], ['operator', '/'], ['number', 6], ['end', ';']]
-#tokens = [['number', '4'], ['operator', '*'],['operator', '('],['operator', '-'],['number', 12],['operator', '+'], ['number', 6], ['operator', ';']]
-#tokens = [['number', 12], ['end', ';']]
+    def __init__(self, tokens):
+        self.tokens = tokens
+        self.current_token = tokens[0]
+        self.counter = 0
+        self.error = []
 
+    def read_next_token(self):
+        self.counter+=1
+        if len(self.tokens) > self.counter:
+            self.current_token = self.tokens[self.counter]
+        else:
+            self.error.append("Syntax error. Expecting ;")
+            self.current_token = ["end", ";"]
 
-counter = 0
-current_token = tokens[0]
-
-
-def nud(l=''): #this empty string argument was a work around b/c when current token is number. the function that should be called is nud, but the algorithm doesn't seem to consider condidition within while loop?
+def nud(current_token): #this empty string argument was a work around b/c when current token is number. the function that should be called is nud, but the algorithm doesn't seem to consider condidition within while loop?
     left = {'type':current_token[0], 'value':current_token[1]}
     return left
 
-def add(l, t):
-    tree = {'type':t[1], 'left': l, 'right': expression(10)}
+def op(tokens, l, t):
+    tree = {'type':t[1], 'left': l, 'right': expression(tokens, op_symbols[t[1]]['lbp'])}
     return tree
 
-def sub(l, t):
-    tree = {'type':t[1], 'left': l, 'right': expression(10)}
-    return tree
 
-def div(l, t):
-    tree = {'type':t[1], 'left': l, 'right': expression(20)}
-    return tree
-
-def mul(l, t):
-    tree = {'type':t[1], 'left': l, 'right': expression(20)}
-    return tree
-
-def neg(right, t):
+def neg(tokens, right, t):
     tree = {'type':t[1], 'right': right}
     return tree
 
-op_symbols = {'+': {'lbp':10, 'led':add}, '/':{'lbp':20, 'led':div}, '*':{'lbp':20, 'led':mul}, '-':{'lbp':10, 'led':sub}, 
-              '-u':{'lbp':1, 'led':neg}}
-symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}}
+op_symbols = {'+': {'lbp':10, 'led':op}, '/':{'lbp':20, 'led':op}, '*':{'lbp':20, 'led':op}, '-':{'lbp':10, 'led':op}, 
+              '-u':{'lbp':1, 'led':neg}, '=':{'lbp':30, 'led':op}}
+symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}, 'identifier':{'lbp':1, 'nud':nud}}
 
-def paren():
-    value = expression(0)
+def paren(tokens):
+    value = expression(tokens, 0)
 
-    if current_token[1] != ")":
-        print "Expecting closing parenthesis"
+    if tokens.current_token[1] != ")":
+        tokens.error.append("Expecting closing parenthesis")
 
     return value
 
 
-def read_next_token():
-    global counter, current_token
-
-    counter+=1
-
-    if counter < len(tokens):
-        current_token = tokens[counter]
-    else:
-        "Syntax Error. Expecting ;"
-
-def expression(rbp=0):
-    global current_token, op_symbols #, symbols
+def expression(tokens, rbp=0):
+    global op_symbols #, symbols
     
-    t = current_token
+    t = tokens.current_token
     
     try:
-        left = symbols[t[0]]['nud']() #TODO: add error handling for the instance where the first token isn't a number...or something invalid.
+        left = symbols[t[0]]['nud'](t)
     
-        return traverse(left, rbp)    
+        return traverse(tokens, left, rbp)    
 
     except KeyError:
-        if current_token[1] == "-":
-            current_token[1] = "-u"
-            t = current_token
+        if tokens.current_token[1] == "-":
+            tokens.current_token[1] = "-u"
+            t = tokens.current_token
 
-            read_next_token()
-            right = symbols[current_token[0]]['nud']()
+            tokens.read_next_token()
 
-            left = symbols[t[0]][t[1]]['led'](right, t)
+            try:
+                right = symbols[tokens.current_token[0]]['nud'](tokens.current_token)
+            except KeyError:
+                tokens.read_next_token()
+                right = paren(tokens)
 
-            return traverse(left, rbp)
-        elif current_token[1] == "(":
-            t = current_token
-            read_next_token()
-            left = paren()
+            left = symbols[t[0]][t[1]]['led'](tokens, right, t)
+            return traverse(tokens, left, rbp)
+        elif tokens.current_token[1] == "(":
+            t = tokens.current_token
+            tokens.read_next_token()
+            left = paren(tokens)
             
-            return traverse(left, rbp)
+            return traverse(tokens, left, rbp)
         else:
-            print "Invalid token. Number expected..."
+            tokens.error.append("Invalid token. Number expected...")
 
-def traverse(left, rbp):
-    global current_token, op_symbols
+def traverse(tokens, left, rbp):
+    global op_symbols
 
-    read_next_token()   
+    tokens.read_next_token()    
 
     try:
-        lbp = symbols[current_token[0]]['lbp']
+        lbp = symbols[tokens.current_token[0]]['lbp']
     except KeyError:
-        if current_token[1] == ")":
+        if tokens.current_token[1] == ")":
             return left
         else:
-            lbp = symbols[current_token[0]][current_token[1]]['lbp']
+            lbp = symbols[tokens.current_token[0]][tokens.current_token[1]]['lbp']
 
     while rbp < lbp:
-        t = current_token
-        read_next_token()
-        left = symbols[t[0]][t[1]]['led'](left, t) #TODO:passing the 't' into the function is a hack. when add() is called the current token has already advanced. must figure out a way to increment current token after add is called...or re-work the next/current token bit
+        t = tokens.current_token
+        tokens.read_next_token()
+        left = symbols[t[0]][t[1]]['led'](tokens, left, t) #TODO:passing the 't' into the function is a hack. when add() is called the current token has already advanced. must figure out a way to increment current token after add is called...or re-work the next/current token bit
 
         try:
-            lbp = symbols[current_token[0]]['lbp']
+            lbp = symbols[tokens.current_token[0]]['lbp']
         except KeyError:
-            if current_token[1] == ")":
+            if tokens.current_token[1] == ")":
                 return left
             else:
-                lbp = symbols[current_token[0]][current_token[1]]['lbp']
+                lbp = symbols[tokens.current_token[0]][tokens.current_token[1]]['lbp']
 
     return left
 
-def parse():
-    return expression()
+def parse(t):
 
-print parse()
+    token = Token(t)
+    temp = expression(token)
+    if token.error == []:
+        return temp
+    return token.error[0]
 
-
-
+if __name__ == "__main__":
+    t = [['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
+    print parse(t)
