@@ -10,6 +10,10 @@ for char in user_input:
 		tokens.append(['number', char])
 	elif re.match('\s', char):
 		tokens.append(['whitespace', char])
+	elif re.match(';', char):
+		tokens.append(['end', char])
+	elif re.match('[a-zA-Z]', char):
+		tokens.append(['identifier', char])
 	else:
 		tokens.append(['other', char])
 
@@ -40,7 +44,7 @@ for i in tokens[1:]:
 	equals current type. if so, set previous to list where first element = current type and the second element = the previous value
 	concaenated with the current value. otherwise, add the previous list to temporary list and set the previous list to the current list"""
 
-	if i[0] == 'number' or i[0] == 'other':
+	if i[0] == 'number' or i[0] == 'other' or i[0]== 'identifier':
 		if prev[0] == i[0]:
 			prev = [i[0], ''.join([prev[1], i[1]])]
 		else:
