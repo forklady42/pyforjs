@@ -1,4 +1,17 @@
+"""
+Basic parser for mathematical expressions in javascript.
+"""
+
+#Global lookup dictionaries
+op_symbols = {'+': {'lbp':10, 'led':op}, '/':{'lbp':20, 'led':op}, '*':{'lbp':20, 'led':op}, '-':{'lbp':10, 'led':op}, 
+              '-u':{'lbp':1, 'led':neg}, '=':{'lbp':30, 'led':op}}
+symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}, 'identifier':{'lbp':1, 'nud':nud}}
+
+
 class Token:
+    """
+    Keeps track of the tokens and the current position in the list of tokens.
+    """
 
     def __init__(self, tokens):
         self.tokens = tokens
@@ -14,11 +27,15 @@ class Token:
             self.error.append("Syntax error. Expecting ;")
             self.current_token = ["end", ";"]
 
-def nud(current_token): #this empty string argument was a work around b/c when current token is number. the function that should be called is nud, but the algorithm doesn't seem to consider condidition within while loop?
+def nud(current_token):
     left = {'type':current_token[0], 'value':current_token[1]}
     return left
 
 def op(tokens, l, t):
+    """
+    Parses the left and right trees of a binary operator and returns the combined tree.
+    """
+    
     tree = {'type':t[1], 'left': l, 'right': expression(tokens, op_symbols[t[1]]['lbp'])}
     return tree
 
@@ -26,10 +43,6 @@ def op(tokens, l, t):
 def neg(tokens, right, t):
     tree = {'type':t[1], 'right': right}
     return tree
-
-op_symbols = {'+': {'lbp':10, 'led':op}, '/':{'lbp':20, 'led':op}, '*':{'lbp':20, 'led':op}, '-':{'lbp':10, 'led':op}, 
-              '-u':{'lbp':1, 'led':neg}, '=':{'lbp':30, 'led':op}}
-symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}, 'identifier':{'lbp':1, 'nud':nud}}
 
 def paren(tokens):
     value = expression(tokens, 0)
@@ -41,6 +54,10 @@ def paren(tokens):
 
 
 def expression(tokens, rbp=0):
+    """
+    Takes in a token object and an optional right binding power. Traverses the token's
+    list of tokens, recursively building a tree. Returns the tree.
+    """
     global op_symbols #, symbols
     
     t = tokens.current_token
@@ -75,6 +92,14 @@ def expression(tokens, rbp=0):
             tokens.error.append("Invalid token. Number expected...")
 
 def traverse(tokens, left, rbp):
+    """
+    Recursively traverses list of tokens along with expression(). Looks up operators
+    in op_symbols and calls the appropriate function to recursively build the left 
+    and right tree of each operator.
+    Returns tree.
+    
+    """
+    
     global op_symbols
 
     tokens.read_next_token()    
@@ -90,8 +115,8 @@ def traverse(tokens, left, rbp):
     while rbp < lbp:
         t = tokens.current_token
         tokens.read_next_token()
-        left = symbols[t[0]][t[1]]['led'](tokens, left, t) #TODO:passing the 't' into the function is a hack. when add() is called the current token has already advanced. must figure out a way to increment current token after add is called...or re-work the next/current token bit
-
+        left = symbols[t[0]][t[1]]['led'](tokens, left, t)
+        
         try:
             lbp = symbols[tokens.current_token[0]]['lbp']
         except KeyError:
@@ -103,6 +128,11 @@ def traverse(tokens, left, rbp):
     return left
 
 def parse(t):
+    
+    """
+    Takes in a list of functions and applies the appropriate functions
+    to build and return the parse tree or return an error.
+    """
 
     token = Token(t)
     temp = expression(token)
