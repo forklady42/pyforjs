@@ -2,11 +2,6 @@
 Basic parser for mathematical expressions in javascript.
 """
 
-#Global lookup dictionaries
-op_symbols = {'+': {'lbp':10, 'led':op}, '/':{'lbp':20, 'led':op}, '*':{'lbp':20, 'led':op}, '-':{'lbp':10, 'led':op}, 
-              '-u':{'lbp':1, 'led':neg}, '=':{'lbp':30, 'led':op}}
-symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}, 'identifier':{'lbp':1, 'nud':nud}}
-
 
 class Token:
     """
@@ -27,8 +22,11 @@ class Token:
             self.error.append("Syntax error. Expecting ;")
             self.current_token = ["end", ";"]
 
-def nud(current_token):
-    left = {'type':current_token[0], 'value':current_token[1]}
+def nud(tokens):
+    if tokens.current_token[0] == 'identifier':
+        if tokens.current_token[1] in keywords:
+            return keywords[tokens.current_token[1]](tokens)
+    left = {'type': tokens.current_token[0], 'value': tokens.current_token[1]}
     return left
 
 def op(tokens, l, t):
@@ -43,6 +41,18 @@ def op(tokens, l, t):
 def neg(tokens, right, t):
     tree = {'type':t[1], 'right': right}
     return tree
+
+def var(tokens):
+    #tokens.read_next_token()
+    if tokens.tokens[tokens.counter + 1][0] != "identifier":
+        tokens.error.append('Variable must follow declaration.')
+
+
+#Global lookup dictionaries
+op_symbols = {'+': {'lbp':10, 'led':op}, '/':{'lbp':20, 'led':op}, '*':{'lbp':20, 'led':op}, '-':{'lbp':10, 'led':op}, 
+              '-u':{'lbp':1, 'led':neg}, '=':{'lbp':5, 'led':op}}
+symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'end':{'lbp':0}, 'identifier':{'lbp':1, 'nud':nud}}
+keywords = {'var': var }
 
 def paren(tokens):
     value = expression(tokens, 0)
@@ -63,7 +73,7 @@ def expression(tokens, rbp=0):
     t = tokens.current_token
     
     try:
-        left = symbols[t[0]]['nud'](t)
+        left = symbols[t[0]]['nud'](tokens)
     
         return traverse(tokens, left, rbp)    
 
@@ -75,7 +85,7 @@ def expression(tokens, rbp=0):
             tokens.read_next_token()
 
             try:
-                right = symbols[tokens.current_token[0]]['nud'](tokens.current_token)
+                right = symbols[tokens.current_token[0]]['nud'](tokens)
             except KeyError:
                 tokens.read_next_token()
                 right = paren(tokens)
@@ -88,7 +98,7 @@ def expression(tokens, rbp=0):
             left = paren(tokens)
             
             return traverse(tokens, left, rbp)
-        else:
+        else:          
             tokens.error.append("Invalid token. Number expected...")
 
 def traverse(tokens, left, rbp):
@@ -102,7 +112,10 @@ def traverse(tokens, left, rbp):
     
     global op_symbols
 
-    tokens.read_next_token()    
+    tokens.read_next_token()
+
+    if tokens.current_token[0] == 'identifier':
+        return expression(tokens, rbp)    
 
     try:
         lbp = symbols[tokens.current_token[0]]['lbp']
@@ -112,9 +125,11 @@ def traverse(tokens, left, rbp):
         else:
             lbp = symbols[tokens.current_token[0]][tokens.current_token[1]]['lbp']
 
+
     while rbp < lbp:
         t = tokens.current_token
         tokens.read_next_token()
+
         left = symbols[t[0]][t[1]]['led'](tokens, left, t)
         
         try:
@@ -141,5 +156,6 @@ def parse(t):
     return token.error[0]
 
 if __name__ == "__main__":
-    t = [['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
+    #t = [['identifier', 'x'],['operator', '='],['number', '2'],['end', ';']]
+    t = [['identifier', 'var'],['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
     print parse(t)

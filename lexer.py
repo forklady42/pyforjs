@@ -21,6 +21,7 @@ def get_tokens():
 			tokens.append(['other', char])
 
 	prev = tokens[0]
+
 	tmp = []
 
 	for i in tokens[1:]:
@@ -29,10 +30,12 @@ def get_tokens():
 			if prev[0] == i[0]:
 				prev = [i[0], ''.join([prev[1], i[1]])]
 			else:
-				tmp.append(prev)
+				if prev[0] != 'whitespace':
+					tmp.append(prev)
 				prev = i
 		else:
-			tmp.append(prev)
+			if prev[0] != 'whitespace':
+				tmp.append(prev)
 			prev = i
 
 	tmp.append(prev)
