@@ -1,3 +1,8 @@
+"""
+Breaks code into tokens and specifies if each piece is an operator,
+number, identifier, or end mark.
+"""
+
 import re
 
 def get_tokens():
