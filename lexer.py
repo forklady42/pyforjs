@@ -5,11 +5,11 @@ number, identifier, or end mark.
 
 import re
 
-def get_tokens():
+def get_tokens(user_input):
 
 	tokens =[]
 
-	user_input = raw_input("code:")
+	#user_input = raw_input("code:")
 
 	for char in user_input:
 		if re.match('[+\-*\/\^%=(),]', char):
@@ -49,4 +49,5 @@ def get_tokens():
 	return tokens
 
 if __name__ == "__main__":
-	print get_tokens()
+    user_input = raw_input("code:")
+    print get_tokens(user_input)

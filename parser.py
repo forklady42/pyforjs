@@ -156,6 +156,7 @@ def parse(t):
     return token.error[0]
 
 if __name__ == "__main__":
-    #t = [['identifier', 'x'],['operator', '='],['number', '2'],['end', ';']]
-    t = [['identifier', 'var'],['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
+    #t = [['identifier', 'var'],['identifier', 'x'],['operator', '='],['number', '2'],['end', ';']]
+    #t = [['identifier', 'var'],['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
+    t=[['identifier', 'var'], ['identifier', 'y'], ['operator', '='], ['number', '6'],['operator', '*'], ['operator', '('], ['number', '8'], ['operator', '+'], ['number', '4'], ['operator', ')'], ['operator', '-'], ['number', '2'], ['end', ';']]
     print parse(t)
