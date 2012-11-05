@@ -1,7 +1,7 @@
 """
 Basic parser for mathematical expressions in javascript.
 """
-
+import re
 
 class Token:
     """
@@ -13,6 +13,7 @@ class Token:
         self.current_token = tokens[0]
         self.counter = 0
         self.error = []
+        self.parentheses = []
 
     def read_next_token(self):
         self.counter+=1
@@ -35,6 +36,7 @@ def op(tokens, l, t):
     """
     
     tree = {'type':t[1], 'left': l, 'right': expression(tokens, op_symbols[t[1]]['lbp'])}
+    print tree
     return tree
 
 
@@ -55,10 +57,15 @@ symbols = {'number':{'lbp':1, 'nud': nud, 'led':nud } ,'operator':op_symbols, 'e
 keywords = {'var': var }
 
 def paren(tokens):
+    
+    print "paren:"
+    print tokens.parentheses
     value = expression(tokens, 0)
+    print "valued"
+    
 
-    if tokens.current_token[1] != ")":
-        tokens.error.append("Expecting closing parenthesis")
+    #if tokens.current_token[1] != ")" and tokens.current_token[1] != "}":
+    #    tokens.error.append("Expecting closing parenthesis")
 
     return value
 
@@ -72,9 +79,15 @@ def expression(tokens, rbp=0):
     
     t = tokens.current_token
     
+    print "e:"
+    print tokens.parentheses
+    
     try:
         left = symbols[t[0]]['nud'](tokens)
-    
+        print "okay mister"
+        print left
+        if tokens.tokens[tokens.counter + 1]:
+            return left
         return traverse(tokens, left, rbp)    
 
     except KeyError:
@@ -92,8 +105,9 @@ def expression(tokens, rbp=0):
 
             left = symbols[t[0]][t[1]]['led'](tokens, right, t)
             return traverse(tokens, left, rbp)
-        elif tokens.current_token[1] == "(":
+        elif re.match('[{(]', tokens.current_token[1]):
             t = tokens.current_token
+            tokens.parentheses.append(t[1])
             tokens.read_next_token()
             left = paren(tokens)
             
@@ -111,6 +125,9 @@ def traverse(tokens, left, rbp):
     """
     
     global op_symbols
+    
+    print "Trav:"
+    print tokens.parentheses
 
     tokens.read_next_token()
 
@@ -120,8 +137,26 @@ def traverse(tokens, left, rbp):
     try:
         lbp = symbols[tokens.current_token[0]]['lbp']
     except KeyError:
-        if tokens.current_token[1] == ")":
+        if tokens.current_token[1] == ')':
+            if len(tokens.parentheses):
+                print "ok"
+                if tokens.parentheses.pop() != '(':
+                    print "here"
+                    tokens.error.append("Syntax error. Unmatched parentheses.")
+            else:
+                print "here too"
+                tokens.error.append("Syntax error. Unmatched parentheses.")
+            #tokens.read_next_token()
             return left
+            
+        elif tokens.current_token[1] == '}':
+            if len(tokens.parentheses):
+                if tokens.parentheses.pop() != '{':
+                    tokens.error.append("Syntax error. Unmatched parentheses.")
+            else:
+                tokens.error.append("Syntax error. Unmatched parentheses.")    
+            return left
+            
         else:
             lbp = symbols[tokens.current_token[0]][tokens.current_token[1]]['lbp']
 
@@ -129,13 +164,43 @@ def traverse(tokens, left, rbp):
     while rbp < lbp:
         t = tokens.current_token
         tokens.read_next_token()
+        print "t while"
+        print t
+        print "current"
+        print tokens.current_token
 
         left = symbols[t[0]][t[1]]['led'](tokens, left, t)
         
         try:
             lbp = symbols[tokens.current_token[0]]['lbp']
         except KeyError:
-            if tokens.current_token[1] == ")":
+            print "ct"
+            print tokens.current_token
+            print tokens.parentheses
+            
+            if tokens.current_token[1] == ')':
+                if len(tokens.parentheses):
+                    print "me!"
+                    print tokens.parentheses
+                    if tokens.parentheses.pop() != '(':
+                        print "ah"
+                        tokens.error.append("Syntax error. Unmatched parentheses.")
+                else:
+                    print "ah too"
+                    print tokens.current_token[1]
+                    print "hmm"
+                    tokens.error.append("Syntax error. Unmatched parentheses.")
+                #tokens.read_next_token()
+                return left
+                
+            elif tokens.current_token[1] == '}':
+                if len(tokens.parentheses):
+                    if tokens.parentheses.pop() != '{':
+                        print "well then"
+                        tokens.error.append("Syntax error. Unmatched parentheses.")
+                else:
+                    print "well too"
+                    tokens.error.append("Syntax error. Unmatched parentheses.")    
                 return left
             else:
                 lbp = symbols[tokens.current_token[0]][tokens.current_token[1]]['lbp']
@@ -153,10 +218,11 @@ def parse(t):
     temp = expression(token)
     if token.error == []:
         return temp
-    return token.error[0]
+    return token.error
 
 if __name__ == "__main__":
+    t = [['operator', '('],['number', '2'], ['operator', '+'], ['number', '3'], ['operator', ')'],['end', ';']]
     #t = [['identifier', 'var'],['identifier', 'x'],['operator', '='],['number', '2'],['end', ';']]
     #t = [['identifier', 'var'],['identifier', 'x'], ['operator', '='], ['number', '3'], ['operator', '+'], ['number', '2'],['end', ';']]
-    t=[['identifier', 'var'], ['identifier', 'y'], ['operator', '='], ['number', '6'],['operator', '*'], ['operator', '('], ['number', '8'], ['operator', '+'], ['number', '4'], ['operator', ')'], ['operator', '-'], ['number', '2'], ['end', ';']]
+    #t=[['identifier', 'var'], ['identifier', 'y'], ['operator', '='], ['number', '6'],['operator', '*'], ['operator', '('], ['number', '8'], ['operator', '+'], ['number', '4'], ['operator', ')'], ['operator', '-'], ['number', '2'], ['end', ';']]
     print parse(t)
